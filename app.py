@@ -5,13 +5,7 @@ from io import BytesIO
 import requests
 import base64
 
-import cloudinary.uploader
-          
-cloudinary.config( 
-  cloud_name = "de91ezxy7", 
-  api_key = "765277158485453", 
-  api_secret = "78nKOALARPs8qmWguhfj24hyVuc" 
-)
+
 app = Flask(__name__)
 def ImageStitching(imageL,imageR, outname):
 
