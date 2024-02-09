@@ -2,6 +2,16 @@ from flask import Flask, request, jsonify
 import cv2
 import numpy as np
 from io import BytesIO
+import requests
+import base64
+
+import cloudinary.uploader
+          
+cloudinary.config( 
+  cloud_name = "de91ezxy7", 
+  api_key = "765277158485453", 
+  api_secret = "78nKOALARPs8qmWguhfj24hyVuc" 
+)
 app = Flask(__name__)
 def ImageStitching(imageL,imageR, outname):
 
@@ -99,9 +109,9 @@ def ImageStitching(imageL,imageR, outname):
     right_keypoints, right_descriptor = sift.detectAndCompute(grayR, maskR) # Change maskR to None if no mask
     
 
-    print("Number of Keypoints Detected In The Left Image: ", len(left_keypoints))
+    # print("Number of Keypoints Detected In The Left Image: ", len(left_keypoints))
     
-    print("Number of Keypoints Detected In The Right Image: ", len(right_keypoints))
+    # print("Number of Keypoints Detected In The Right Image: ", len(right_keypoints))
     
     
     bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck = False) 
@@ -113,13 +123,13 @@ def ImageStitching(imageL,imageR, outname):
   
     result = cv2.drawMatches(imageL, left_keypoints, imageR, right_keypoints, matches[:100], grayR, flags = 2)
     
-    cv2.imshow('SIFT Matches', result)
+    # cv2.imshow('SIFT Matches', result)
     
     # #print("--- %s seconds ---" % (time.time() - start_time)) # Used for testing 
     # # Print total number of matching points between the training and query images
-    print("\nSIFT Matches are ready. \nNumber of Matching Keypoints: ", len(matches))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # print("\nSIFT Matches are ready. \nNumber of Matching Keypoints: ", len(matches))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     
     # KNN Matching
     
@@ -248,6 +258,9 @@ def ImageStitching(imageL,imageR, outname):
     norm_pf = cv2.normalize(final_result, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
     cv2.imwrite(outname+'.jpg', final_result)
+
+    stitched_image = cv2.imread(outname + '.jpg')
+    return stitched_image
     
     
     
@@ -264,14 +277,39 @@ def ImageStitching(imageL,imageR, outname):
         return
 
 
-    
+def download_image(url):
+        response = requests.get(url)
+        return cv2.imdecode(np.frombuffer(response.content, np.uint8), -1)
+
 
 @app.route('/stitch', methods=['POST'])
 def stitch_images():
-    image_urls = request.json.get('image_urls', [])
-    print(image_urls)
+    data = request.json
+    print(data)
     # ImageStitching(image1, image2, output_name)
-    result = {'message': 'Images stitched successfully'}
+    image_urls = data['image_urls']
+    image1 = download_image(image_urls[0])
+    image2 = download_image(image_urls[1])
+   
+    outname = "op"
+
+    # Download images from URLs and convert to OpenCV format
+    # images = []
+    # for url in image_urls:
+    #     # Download image using your preferred method (e.g., requests library)
+    #     # Example: response = requests.get(url)
+    #     Example: image = cv2.imdecode(np.fromstring(response.content, np.uint8), cv2.IMREAD_COLOR)
+    #     # Add the downloaded image to the images list
+    #     images.append(image)
+
+    # Call ImageStitching function
+    responseData=ImageStitching(image1, image2, outname)
+    retval, buffer = cv2.imencode('.jpg', responseData)
+    stitched_image_base64 = base64.b64encode(buffer).decode('utf-8')
+
+    # cloudinary.uploader.upload(responseData, 
+    # public_id = "checking")
+    result = {'message': stitched_image_base64}
     return jsonify(result)
 
 if __name__ == '__main__':
