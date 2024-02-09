@@ -1,9 +1,7 @@
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
-import requests
 from io import BytesIO
-import sys
 app = Flask(__name__)
 def ImageStitching(imageL,imageR, outname):
 
