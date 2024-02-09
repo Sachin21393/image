@@ -10,7 +10,7 @@ export PYTHONUNBUFFERED=true
 VIRTUALENV=.data/venv
 
 if [ ! -d $VIRTUALENV ]; then
-  python3 -m venv $VIRTUALENV
+  python -m venv $VIRTUALENV
 fi
 
 if [ ! -f $VIRTUALENV/bin/pip ]; then
@@ -21,4 +21,4 @@ fi
 $VIRTUALENV/bin/pip install -r requirements.txt
 
 # Run a glorious Python 3 server
-$VIRTUALENV/bin/python3 app.py
+$VIRTUALENV/bin/python app.py
